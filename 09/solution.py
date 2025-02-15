@@ -91,8 +91,6 @@ while True:
     else:
         physical_map = swap_positions(last_file_location, first_free, physical_map)
 
-print(physical_map)
-
 # Calculate checksum
 checksum = 0
 for i, num in enumerate(physical_map):
