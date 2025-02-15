@@ -184,3 +184,7 @@ while not reached_end_of_map:
 num_x = np.count_nonzero(guard_map == 'X')
 print(f"Nuber of 'X's is {num_x}")
 print(obstacle_locations)
+
+"""
+Part 2 doesn't work :(
+"""
