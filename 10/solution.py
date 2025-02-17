@@ -1,36 +1,36 @@
 import numpy as np
 
-def count_paths_and_ratings(grid: np.array, target_val:int, start_val:int) -> int:
-    """Counts the number of 9s reachable from each 0."""
+def count_paths_and_ratings(grid: np.array, target_val: int, start_val: int) -> tuple[int, int]:
+    """Counts reachable targets and unique paths from start to target values in a grid."""
 
     rows, cols = grid.shape
-    reachable_targets = set()  # Use a set to store unique (row, col) of reachable 9s
-    num_ratings = 0
 
     def is_valid(row, col):
         return 0 <= row < rows and 0 <= col < cols
 
-    def dfs(row, col, current_val):
-        nonlocal reachable_targets, num_ratings
-
+    def dfs(row, col, current_val, reachable_targets, num_ratings):
         if grid[row, col] == target_val:
-            reachable_targets.add((row, col))  # Add coordinates of 9, since this is a set, deduplication occurs automatically
-            num_ratings += 1
-            return
+            reachable_targets.add((row, col))
+            return reachable_targets, num_ratings + 1  # Return updated values
 
         for dr, dc in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
             new_row, new_col = row + dr, col + dc
             if is_valid(new_row, new_col) and grid[new_row, new_col] == current_val + 1:
-                dfs(new_row, new_col, current_val + 1)
+                reachable_targets, num_ratings = dfs(new_row, new_col, current_val + 1, reachable_targets, num_ratings) # receive updated values
+
+        return reachable_targets, num_ratings  # Return current values if no target found
+
 
     total_reachable_targets = 0
+    total_num_ratings = 0  # Initialize outside the loop
 
     for start_location in np.argwhere(grid == start_val):
-        reachable_targets.clear()  # Reset for each starting 0
-        dfs(start_location[0], start_location[1], start_val)
-        total_reachable_targets += len(reachable_targets) #add count of unique 9s from that 0
+        reachable_targets = set()
+        reachable_targets, num_ratings = dfs(start_location[0], start_location[1], start_val, reachable_targets, 0) #pass initial values to DFS
+        total_reachable_targets += len(reachable_targets)
+        total_num_ratings += num_ratings # accumulate total path count
 
-    return total_reachable_targets, num_ratings
+    return total_reachable_targets, total_num_ratings
 
 
 # Example usage:
