@@ -42,8 +42,8 @@ def calculate_pushes(a_x, b_x, a_y, b_y, prize_x, prize_y) -> tuple[int, int]:
     then [x,y] = A^-1 . [prize_x, prize_y[]
     """
 
-    A = np.array([[a_x,b_x],[a_y,b_y]])
-    P = np.array([prize_x,prize_y])
+    A = np.array([[a_x, b_x], [a_y, b_y]])
+    P = np.array([prize_x, prize_y])
     a_pushes, b_pushes = np.linalg.solve(A, P).round().astype(int)
 
     ## double check integer versions work
@@ -105,7 +105,7 @@ for machine_num, machine_config in enumerate(machines):
     a_pushes, b_pushes = calculate_pushes(a_x, b_x, a_y, b_y, prize_x, prize_y)
     if a_pushes is not None:
         machine_tokens = a_pushes*3 + b_pushes*1
-        # print(f"{machine_num}. a_pushes: {a_pushes}, b_pushes: {b_pushes}, tokens = {machine_tokens}")
+        print(f"{machine_num}. a_pushes: {a_pushes}, b_pushes: {b_pushes}, tokens = {machine_tokens}")
         total_tokens += machine_tokens
 
 print(f"\n Total tokens: {total_tokens}")
