@@ -6,7 +6,7 @@ Part 2 was much much harder, eventually I solved it with a lot of elbow grease a
 
 Glad I completed this.
 
-The last piece about deduplication is also useful. Gemini recommended I write a whole function to deduplicate a list of list
+The last piece about deduplication is also useful. Gemini recommended I write a whole bespoke function to deduplicate a list of list
 
 ```
 
@@ -34,10 +34,8 @@ def deduplicate_list_of_lists(list_of_lists):
 
 ```
 
-While [this](https://stackoverflow.com/questions/2213923/removing-duplicates-from-a-list-of-lists) post from stackoverflow reduces the amount of code to a more manageable 2 lines.
+While [this](https://stackoverflow.com/questions/2213923/removing-duplicates-from-a-list-of-lists) post from stackoverflow reduces the amount of code to a more manageable 2 lines using the built-in itertools.
 ```
- 249
-
 >>> k = [[1, 2], [4], [5, 6, 2], [1, 2], [3], [4]]
 >>> import itertools
 >>> k.sort()
