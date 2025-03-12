@@ -58,7 +58,7 @@ def get_robot_position(warehouse_grid: list) -> list:
             return [r, c]
         except ValueError:
             pass  # Robot not found in this row, continue searching
-    return None
+    raise("Robot not found in warehouse")
 
 def calc_gps(warehouse_grid: list) -> int:
     gps_sum = 0
@@ -76,6 +76,7 @@ def get_full_box_pos(box_pos: list, warehouse_grid: list) -> list:
 
     if warehouse_grid[box_pos[0]][box_pos[1]] == '[':
     # full_box_pos has the two locations of both sides of the box
+    # returns the left side as element 0 and the right side as element 1
         full_box_pos = [box_pos, [box_pos[0], box_pos[1]+1]]
     else:
         full_box_pos = [[box_pos[0], box_pos[1]-1], box_pos]
@@ -91,30 +92,42 @@ def move_box_up_down(full_box_pos: list, warehouse_grid: list, move_char: str) -
     # Only move the box if the new position is empty for both sides
     if warehouse_grid[full_box_pos[0][0]+dr][full_box_pos[0][1] + dc] == '.' and \
     warehouse_grid[full_box_pos[1][0]+dr][full_box_pos[1][1] + dc] == '.':
+        
         warehouse_grid[full_box_pos[0][0]][full_box_pos[0][1]] = '.'
         warehouse_grid[full_box_pos[1][0]][full_box_pos[1][1]] = '.'
+
         warehouse_grid[full_box_pos[0][0]+dr][full_box_pos[0][1] + dc] = '['
         warehouse_grid[full_box_pos[1][0]+dr][full_box_pos[1][1] + dc] = ']'
 
     return warehouse_grid
 
-def get_boxes_vertical(warehouse_grid: list, vertical_boxes: list, move_char: str) -> list:
+def get_boxes_vertical(warehouse_grid: list, boxes: list, move_char: str) -> list:
     """
-    Args:
-        warehouse_grid: warehouse grid
+    Identifies boxes that are directly adjacent to a set of given boxes in the direction of movement (up or down).
 
-        vertical_boxes: list of box positions
+    Args:
+        warehouse_grid: A list of lists representing the warehouse layout.
+        boxes: A list of boxes, where each box is represented by a list of two coordinate pairs (e.g., [[r1, c1], [r2, c2]]).
+        move_char: The direction of movement ('^' for up or 'v' for down).
+
     Returns:
-        a list of box positions for boxes that are in the direction of move_char from very box in vertical_boxes
+        A list of boxes adjacent to the input boxes in the specified direction. Each box in the output list
+        is represented as a list of two coordinate pairs.
+
+    Raises:
+        KeyError: if move_char is not in move_deltas
     """
-    vertical_box_positions = []
-    dr,dc = move_deltas[move_char]
-    for full_box_pos in vertical_boxes:
-        if warehouse_grid[full_box_pos[0][0]+dr][full_box_pos[0][1] + dc] in ['[',']']:
-            vertical_box_positions.append(get_full_box_pos([full_box_pos[0][0]+dr, full_box_pos[0][1] + dc], warehouse_grid))
-        if warehouse_grid[full_box_pos[1][0]+dr][full_box_pos[1][1] + dc] in ['[',']']:
-            vertical_box_positions.append(get_full_box_pos([full_box_pos[1][0]+dr, full_box_pos[1][1] + dc], warehouse_grid))
-    return vertical_box_positions
+    dr, dc = move_deltas[move_char]
+    adjacent_boxes = []
+
+    for box in boxes:
+        for side_pos in box:  # Iterate through both sides of a box
+            next_r, next_c = side_pos[0] + dr, side_pos[1] + dc
+            if warehouse_grid[next_r][next_c] in ['[', ']']:
+                adjacent_boxes.append(get_full_box_pos([next_r, next_c], warehouse_grid))
+
+    return adjacent_boxes
+
 
 
 def solve_new(warehouse, moves_str):
@@ -125,9 +138,6 @@ def solve_new(warehouse, moves_str):
     robot_pos = get_robot_position(warehouse_grid)
 
     moves = list(moves_str)
-    # print("Initial state:")
-    # for row in warehouse_grid:
-    #     print("".join(row))
 
     for i, move_char in enumerate(moves):
         dr, dc = move_deltas[move_char]
@@ -142,16 +152,7 @@ def solve_new(warehouse, moves_str):
             warehouse_grid[target_pos[0]][target_pos[1]] = '@'
             robot_pos = target_pos
         
-        elif target_cell_content == '[' or target_cell_content == ']':
-            """
-            e.g. if moving one step >.
-
-                    push_pos (where the boxes will end up)
-                      v
-            ...@[][][]...
-                ^
-             target_pos (where the robot will end up)
-            """
+        elif target_cell_content in ['[',']']:
             # Count how many boxes in the direction we're going
             push_pos = [target_pos[0] + dr, target_pos[1] + dc]
             push_cell_content = warehouse_grid[push_pos[0]][push_pos[1]]
@@ -164,6 +165,16 @@ def solve_new(warehouse, moves_str):
             elif push_cell_content == '.':
 
                 if move_char == '<' or move_char == '>':
+                    """
+                    Moving left or right is easy.
+                    e.g. if moving one step >.
+
+                            push_pos (where the boxes will end up)
+                            v
+                    ...@[][][]...
+                        ^
+                    target_pos (where the robot will end up)
+                    """
                     # Start from the end of the boxes
                     box_pos = [push_pos[0] - dr, push_pos[1] - dc]
                     box_cell_content = warehouse_grid[box_pos[0]][box_pos[1]]
@@ -175,8 +186,10 @@ def solve_new(warehouse, moves_str):
                     warehouse_grid[robot_pos[0]][robot_pos[1]] = '.'
                     warehouse_grid[target_pos[0]][target_pos[1]] = '@'
                     robot_pos = target_pos
-                else:
+                
+                elif move_char == 'v' or move_char == '^':
                     """
+                    Moving up or down is a harder
                     e.g. if moving one step ^.
 
                             ...
@@ -186,7 +199,7 @@ def solve_new(warehouse, moves_str):
                             @< robot_pos
                             ...
                             ...
-                    boxes_to_move = [ [full_box_pos[0],full_box_pos[1]],  [[x1,y1],[x1,y2]] ]
+                    boxes_to_move = [ [full_box_pos[0],full_box_pos[1]],  [[x1,y1],[x1,y2]], ... ]
                     
                     * full_box_pos[0] is a list of the x,y coordinates of the left side of the box
                     * full_box_pos[1] is a list of the x,y coordinates of the right side of the box
@@ -200,7 +213,8 @@ def solve_new(warehouse, moves_str):
                         vertical_boxes = get_boxes_vertical(warehouse_grid, vertical_boxes, move_char)
                     boxes_to_move = remove_duplicates_boxes_and_order(boxes_in_the_way, move_char)
                     
-                    # Check if any of the boxes to move are obstructed, if even one is obstructed, nothing moves.
+                    # Check if any of the boxes to move are obstructed
+                    # Any obstruction will propogate back to the first box, and the first box won't move, meaning nothing moves
                     if any(check_obstruction(full_box_pos, warehouse_grid, move_char) for full_box_pos in boxes_to_move):
                         continue
 
@@ -223,9 +237,6 @@ def solve(warehouse, moves_str):
     robot_pos = get_robot_position(warehouse_grid)
 
     moves = list(moves_str)
-    # print("Initial state:")
-    # for row in warehouse_grid:
-    #     print("".join(row))
 
     for i, move_char in enumerate(moves):
         dr, dc = move_deltas[move_char]
@@ -265,17 +276,13 @@ def modify_warehouse(warehouse_grid: list) -> list:
         new_row = []
         for col in row:
             if col == 'O':
-                new_row.append('[')
-                new_row.append(']')
+                new_row.extend(['[', ']'])
             elif col == '.':
-                new_row.append('.')
-                new_row.append('.')
+                new_row.extend(['.', '.'])
             elif col == '#':
-                new_row.append('#')
-                new_row.append('#')
+                new_row.extend(['#', '#'])
             elif col == '@':
-                new_row.append('@')
-                new_row.append('.')
+                new_row.extend(['@', '.'])
         new_warehouse.append(new_row)
 
     return new_warehouse
@@ -311,3 +318,4 @@ warehouse, moves_str = process_file('./15/input.txt')
 new_warehouse = modify_warehouse(warehouse)
 solution, gps = solve_new(new_warehouse, moves_str)
 print(f"GPS for part 2: {gps}")
+assert gps == 1535509
