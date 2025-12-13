@@ -31,6 +31,9 @@ def move_left(pos: int, num_clicks: int)->int:
     return new_pos
 
 def rotate(rotations: list)->int:
+    """
+    returns the number of times the rotation ends at 0
+    """
     pos = starting_position
     zero_count = 0 
     for r in rotations:
