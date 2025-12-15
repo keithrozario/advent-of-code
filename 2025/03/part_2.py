@@ -1,19 +1,25 @@
 def max_joltage(battery: str) -> int:
-
-    largest_number_index = -1
-    largest_number = ""
+    last_found_index = -1
+    result_digits = []
     max_number_length = 12
-    for i in range(1,max_number_length+1):
-        if max_number_length - i == 0:
-            # empty and zero (or negative 0) do not mean the same thing
-            new_battery = battery[largest_number_index+1:]
-        else:
-            new_battery = battery[largest_number_index+1:-(max_number_length-i)]
-        largest_number_in_range = max([int(x) for x in new_battery])
-        largest_number_index += new_battery.find(str(largest_number_in_range)) + 1 
-        largest_number += battery[largest_number_index]
+    battery_len = len(battery)
 
-    return int(largest_number)
+    # We need to select `max_number_length` digits
+    for i in range(max_number_length):
+        digits_to_pick_later = (max_number_length - 1) - i
+        search_start = last_found_index + 1
+        search_end = battery_len - digits_to_pick_later
+
+        search_window = battery[search_start:search_end]
+        best_digit = max(search_window)
+        # Find the index of the best digit within the current search window.
+        relative_index = search_window.find(best_digit)
+        
+        last_found_index = search_start + relative_index
+        
+        result_digits.append(best_digit)
+
+    return int("".join(result_digits))
 
 def total_joltage(batteries: list)->int:
     total_joltage = 0 
