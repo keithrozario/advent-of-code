@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List
 import numpy as np
 
 def add_all_numbers(numbers: List[int])->int:
