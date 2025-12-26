@@ -37,7 +37,7 @@ def get_wall_distance(boxes: list) -> int:
 
     for box in boxes:
         # we construct a graph with all boxes first,
-        # this ensures that we're not trying to checking for connected-ness on a graph with only some of the boxes
+        # this ensures that we're not checking for connected-ness on a graph with only some of the boxes
         G.add_node(tuple(int(point) for point in box))
     
     # continue till completion
