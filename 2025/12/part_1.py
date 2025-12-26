@@ -1,6 +1,9 @@
 import os
 import re
 
+import sys
+sys.setrecursionlimit(20000)
+
 def get_rotations_and_flips(shape_coords):
     def rotate(coords):
         return [(-x, y) for y, x in coords]
@@ -65,12 +68,16 @@ def can_fit(grid, remaining_shapes, all_presents, W, H):
 
 def main():
 
-    with open('./2025/12/sample.txt', 'r') as f:
+    with open('input.txt', 'r') as f:
         content = f.read()
 
     # Split the file into shapes and regions
     # We look for the first occurrence of "x" which denotes a region line
     parts = re.split(r'(\d+x\d+:)', content, maxsplit=1)
+    if len(parts) < 2:
+        print("Error: Could not split file into shapes and regions.")
+        return
+        
     shapes_section = parts[0]
     
     # Parse Shapes
@@ -94,11 +101,15 @@ def main():
         if coords:
             all_presents[idx] = get_rotations_and_flips(coords)
 
-    # Reconstruct the regions list
-    regions_section = parts[1] + parts[2] if len(parts) > 2 else ""
-    # Combine the delimiter back with the data
-    region_lines = re.findall(r'(\d+x\d+:\s*[\d\s]+)', content)
+    # Add Dummy shape for empty spaces
+    all_presents[-1] = [[(0, 0)]]
 
+    # Reconstruct the regions list
+    region_lines = []
+    for line in content.splitlines():
+        if re.match(r'^\d+x\d+:', line):
+            region_lines.append(line.strip())
+    
     possible_count = 0
     for line in region_lines:
         header, counts = line.split(':')
@@ -117,10 +128,15 @@ def main():
                     target_shapes.append(p_idx)
 
         if total_area > (W * H) or not target_shapes:
-            if total_area == 0 and not target_shapes: pass # Empty region line
-            elif total_area > (W * H): pass # Too big
+            if total_area == 0 and not target_shapes: pass
+            elif total_area > (W * H): pass
             else: pass
         else:
+            # Add dummies for slack
+            slack = (W * H) - total_area
+            for _ in range(slack):
+                target_shapes.append(-1)
+            
             target_shapes.sort(key=lambda x: len(all_presents[x][0]), reverse=True)
             grid = [[0 for _ in range(W)] for _ in range(H)]
             if can_fit(grid, target_shapes, all_presents, W, H):
